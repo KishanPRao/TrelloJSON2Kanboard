@@ -91,7 +91,7 @@ class TrelloJSON2KanboardModel extends Base
             if (!is_null($values)) {
                 $checklistItems = $checklist->checkItems;
                 usort($checklistItems, function ($a, $b) {
-                    return $a->pos > $b->pos;
+                    return $a->pos <=> $b->pos;
                 });
                 foreach ($checklistItems as $checkitem) {
                     $status = $checkitem->state == 'complete' ? 2 : 0;
