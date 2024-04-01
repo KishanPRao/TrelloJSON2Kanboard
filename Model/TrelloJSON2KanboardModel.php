@@ -52,6 +52,24 @@ class TrelloJSON2KanboardModel extends Base
                     }
                 }
             }
+            $metadata = array('checklists' => array());
+            $checklistPos = 0;
+            foreach ($jsonObj->checklists as $checklist) {
+                if ($checklist->idCard === $card->id) {
+                    $value = array(
+                        "name" => $checklist->name,
+                        "position" => ++$checklistPos,
+                        "items" => array()
+                    );
+                    foreach ($checklist->checkItems as $checkitem) {
+                        array_push($value['items'], array(
+                            "id" => $checkitem->id
+                        ));
+                    }
+                    array_push($metadata['checklists'], $value);
+                }
+            }
+            $task->metadata = $metadata;
         }
 
         //getting actions from JSON file
@@ -71,9 +89,13 @@ class TrelloJSON2KanboardModel extends Base
             //only get checklists that belongs to this card
             $values = $this->checkitem_card_id($project->columns, $checklist->idCard);
             if (!is_null($values)) {
-                foreach ($checklist->checkItems as $checkitem) {
+                $checklistItems = $checklist->checkItems;
+                usort($checklistItems, function ($a, $b) {
+                    return $a->pos > $b->pos;
+                });
+                foreach ($checklistItems as $checkitem) {
                     $status = $checkitem->state == 'complete' ? 2 : 0;
-                    $subtask = new Subtask($checkitem->name, $status);
+                    $subtask = new Subtask($checkitem->name, $status, $checkitem->id);
                     array_push($project->columns[$values['column_key']]->tasks[$values['task_key']]->subtasks, $subtask);
                 }
             }
@@ -153,6 +175,7 @@ class Task
     var $subtasks = array();
     var $comments = array();
     var $attachments = array();
+    var $metadata;
 
     function __construct($name, $trello_id, $date_due, $desc)
     {
@@ -167,11 +190,13 @@ class Subtask
 {
     var $content;
     var $status;
+    var $trello_id;
 
-    function __construct($content, $status)
+    function __construct($content, $status, $trello_id)
     {
         $this->content = $content;
         $this->status = $status;
+        $this->trello_id = $trello_id;
     }
 }
 

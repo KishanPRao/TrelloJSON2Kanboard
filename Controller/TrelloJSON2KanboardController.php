@@ -86,6 +86,7 @@ class TrelloJSON2KanboardController extends BaseController
                             );
                             //creating task
                             $task_id = $this->taskCreationModel->create($values);
+                            $task_metadata = &$task->metadata;
 
                             foreach ($task->subtasks as $subtask) {
                                 $values = array(
@@ -95,7 +96,17 @@ class TrelloJSON2KanboardController extends BaseController
                                 );
                                 //creating subtask
                                 $subtask_id = $this->subtaskModel->create($values);
+                                foreach ($task_metadata['checklists'] as &$checklist) {
+                                    foreach ($checklist['items'] as &$item) {
+                                        if ($item['id'] == $subtask->trello_id) {
+                                            $item['id'] = $subtask_id;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
+
+                            $this->taskMetadataModel->save($task_id, ['metadata' => json_encode($task_metadata)]);
 
                             foreach ($task->comments as $comment) {
                                 $values = array(
