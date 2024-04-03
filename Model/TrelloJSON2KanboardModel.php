@@ -16,24 +16,26 @@ class TrelloJSON2KanboardModel extends Base
     {
         $project = new Project($jsonObj->name);
 
+        $metadata = array('closed_columns' => array());
         //getting columns from JSON file
         foreach ($jsonObj->lists as $list) {
+            // Add project metadata for archived lists / closed columns
             if ($list->closed) {
-                //ignore archived lists
-                continue;
+                array_push($metadata['closed_columns'], $list->id);
             }
             //creating column
             $column = new Column($list->name, $list->id);
             array_push($project->columns, $column);
         }
+        $project->metadata = $metadata;
 
         foreach ($jsonObj->cards as $card) {
-            if ($card->closed) {
-                //ignore archived lists
-                continue;
-            }
+            $is_active = $card->closed ? 0 : 1;    // Assume archived/archived cards as inactive tasks.
             $due_date = $card->due !== null ? date('Y-m-d H:i', strtotime($card->due)) : null;
-            $task = new Task($card->name, $card->id, $due_date, $card->desc);
+            $date_completed = null;
+            $date_creation = $card->dateLastActivity !== null ? date('Y-m-d H:i', strtotime($card->dateLastActivity)) : null;
+            $date_modification = $card->dateLastActivity !== null ? date('Y-m-d H:i', strtotime($card->dateLastActivity)) : null;
+            $task = new Task($card->name, $card->id, $due_date, $card->desc, $is_active, $date_completed, $date_creation, $date_modification);
             $column_id = $this->card_column_id($project->columns, $card->idList);
             if (!is_null($column_id)) {
                 array_push($project->columns[$column_id]->tasks, $task);
@@ -146,6 +148,7 @@ class Project
 {
     public $name;
     public $columns = array();
+    var $metadata;
 
     public function __construct($name)
     {
@@ -176,13 +179,21 @@ class Task
     var $comments = array();
     var $attachments = array();
     var $metadata;
+    var $is_active;
+    var $date_completed;
+    var $date_creation;
+    var $date_modification;
 
-    function __construct($name, $trello_id, $date_due, $desc)
+    function __construct($name, $trello_id, $date_due, $desc,  $is_active, $date_completed, $date_creation, $date_modification)
     {
         $this->name = $name;
         $this->trello_id = $trello_id;
         $this->date_due = $date_due;
         $this->desc = $desc;
+        $this->is_active = $is_active;
+        $this->date_completed = $date_completed;
+        $this->date_creation = $date_creation;
+        $this->date_modification = $date_modification;
     }
 }
 

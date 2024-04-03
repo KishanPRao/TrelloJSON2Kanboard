@@ -75,6 +75,14 @@ class TrelloJSON2KanboardController extends BaseController
                     foreach ($project->columns as $column) {
                         //creating column
                         $column_id = $this->columnModel->create($project_id, $column->name, 0, '', 0);
+                        $project_metadata = &$project->metadata;
+                        foreach ($project_metadata['closed_columns'] as &$closed_column) {
+                            if ($closed_column == $column->trello_id) {
+                                $closed_column = $column_id;
+                                break;
+                            }
+                        }
+                        $this->projectMetadataModel->save($project_id, ['metadata' => json_encode($project_metadata)]);
 
                         foreach ($column->tasks as $task) {
                             $values = array(
@@ -83,6 +91,10 @@ class TrelloJSON2KanboardController extends BaseController
                                 'column_id' => $column_id,
                                 'date_due' => $task->date_due,
                                 'description' => $task->desc,
+                                'is_active' => $task->is_active,
+                                'date_completed' => $task->date_completed,
+                                'date_creation' => $task->date_creation,
+                                'date_modification' => $task->date_modification,
                             );
                             //creating task
                             $task_id = $this->taskCreationModel->create($values);

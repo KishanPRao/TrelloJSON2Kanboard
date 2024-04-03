@@ -1,6 +1,14 @@
 TrelloJSON2Kanboard
 ==============================
 
+Additions:
+- Import multi-checklist as task metadata
+- Import archived list (column info in project metadata) & card (task as closed)
+- Import date info
+
+TODO:
+- Assign to main user? UI mode
+
 Plugin for Importing Trello Projects from JSON Files to Kanboard.
 
 Donate to help keep this project maintained.
