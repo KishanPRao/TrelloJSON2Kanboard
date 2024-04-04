@@ -83,6 +83,8 @@ class TrelloJSON2KanboardController extends BaseController
                             }
                         }
                         $this->projectMetadataModel->save($project_id, ['metadata' => json_encode($project_metadata)]);
+                        $owner_id = $this->userModel->getQuery()->findOneColumn('id');
+                            // TODO: Provide drop-down on UI to select from existing users.
 
                         foreach ($column->tasks as $task) {
                             $values = array(
@@ -95,6 +97,7 @@ class TrelloJSON2KanboardController extends BaseController
                                 'date_completed' => $task->date_completed,
                                 'date_creation' => $task->date_creation,
                                 'date_modification' => $task->date_modification,
+                                'owner_id' => $owner_id,
                             );
                             //creating task
                             $task_id = $this->taskCreationModel->create($values);
