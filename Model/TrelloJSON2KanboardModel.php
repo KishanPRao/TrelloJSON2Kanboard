@@ -16,18 +16,18 @@ class TrelloJSON2KanboardModel extends Base
     {
         $project = new Project($jsonObj->name);
 
-        $metadata = array('closed_columns' => array());
         //getting columns from JSON file
         foreach ($jsonObj->lists as $list) {
-            // Add project metadata for archived lists / closed columns
+            // Set `hide_in_dashboard` for archived lists / closed columns
             if ($list->closed) {
-                array_push($metadata['closed_columns'], $list->id);
+                $hide_in_dashboard = 1;
+            } else {
+                $hide_in_dashboard = 0;
             }
             //creating column
-            $column = new Column($list->name, $list->id);
+            $column = new Column($list->name, $list->id, $hide_in_dashboard);
             array_push($project->columns, $column);
         }
-        $project->metadata = $metadata;
 
         foreach ($jsonObj->cards as $card) {
             $is_active = $card->closed ? 0 : 1;    // Assume archived/archived cards as inactive tasks.
@@ -148,7 +148,6 @@ class Project
 {
     public $name;
     public $columns = array();
-    var $metadata;
 
     public function __construct($name)
     {
@@ -161,11 +160,13 @@ class Column
     var $name;
     var $trello_id;
     var $tasks = array();
+    var $hide_in_dashboard;
 
-    function __construct($name, $trello_id)
+    function __construct($name, $trello_id, $hide_in_dashboard)
     {
         $this->name = $name;
         $this->trello_id = $trello_id;
+        $this->hide_in_dashboard = $hide_in_dashboard;
     }
 }
 

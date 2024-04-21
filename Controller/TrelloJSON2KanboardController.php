@@ -74,17 +74,9 @@ class TrelloJSON2KanboardController extends BaseController
 
                     foreach ($project->columns as $column) {
                         //creating column
-                        $column_id = $this->columnModel->create($project_id, $column->name, 0, '', 0);
-                        $project_metadata = &$project->metadata;
-                        foreach ($project_metadata['closed_columns'] as &$closed_column) {
-                            if ($closed_column == $column->trello_id) {
-                                $closed_column = $column_id;
-                                break;
-                            }
-                        }
-                        $this->projectMetadataModel->save($project_id, ['metadata' => json_encode($project_metadata)]);
+                        $column_id = $this->columnModel->create($project_id, $column->name, 0, '', $column->hide_in_dashboard);
                         $owner_id = $this->userModel->getQuery()->findOneColumn('id');
-                            // TODO: Provide drop-down on UI to select from existing users.
+                        // TODO: Provide drop-down on UI to select from existing users.
 
                         foreach ($column->tasks as $task) {
                             $values = array(
@@ -120,8 +112,10 @@ class TrelloJSON2KanboardController extends BaseController
                                     }
                                 }
                             }
-
-                            $this->taskMetadataModel->save($task_id, ['metadata' => json_encode($task_metadata)]);
+                            $this->taskMetadataModel->save($task_id, [
+                                'task_id' => $task_id,
+                                'metadata' => json_encode($task_metadata)
+                            ]);
 
                             foreach ($task->comments as $comment) {
                                 $values = array(
