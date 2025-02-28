@@ -55,14 +55,16 @@ class TrelloJSON2KanboardModel extends Base
                 }
             }
             $metadata = array('checklists' => array());
-            $checklistPos = 0;
+            $checklistPos = 1;
             foreach ($jsonObj->checklists as $checklist) {
                 if ($checklist->idCard === $card->id) {
                     $value = array(
-                        "name" => $checklist->name,
-                        "position" => ++$checklistPos,
+                        "id" => $checklistPos,
+                        "title" => $checklist->name,
+                        "position" => $checklistPos,
                         "items" => array()
                     );
+                    $checklistPos++;
                     foreach ($checklist->checkItems as $checkitem) {
                         array_push($value['items'], array(
                             "id" => $checkitem->id
